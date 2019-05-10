@@ -1,0 +1,545 @@
+import java.awt.BorderLayout;
+import java.awt.*;
+import javax.swing.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+
+public class Calculator extends JFrame implements ActionListener {
+
+	private JButton[][] buttons;
+
+	private static String [][] caracteres = {
+			{"x!", "e^x", "raiz²", "7","8","9","/"},
+			{"raiz³", "%", "x²", "4","5","6","*"},
+			{"x³", "x^y", "pi", "1","2","3","-"},
+			{"Clear", "(", ")", "0",".","=","+" }};
+	
+	private ArrayList <ArrayList<String>> orderOfOperations = new ArrayList <ArrayList<String>> ();
+
+	private BorderLayout borderLayout;
+	private JTextField textField = new JTextField(1);
+	private ArrayList <Double> numberList = new ArrayList <Double> ();
+	private ArrayList <Integer> negativeNumbers = new ArrayList <Integer> ();
+	private ArrayList <String> normalOperationsList = new ArrayList <String> ();
+	private ArrayList <String> parenthesesList = new ArrayList <String> ();
+	private ArrayList <String> operationList = new ArrayList <String> ();
+	
+	private boolean numericalValue;
+	private boolean lastActionWasNumber = true;
+	private String lastString = "0";
+	private boolean lastActionWasPi = false;
+	private boolean currentNumberHasComma = false;
+	private int numberOfNumbersAfterComma = 0;
+
+	
+	private void ClearLists () {
+		numberList.clear();
+		parenthesesList.clear();
+		normalOperationsList.clear();	
+		operationList.clear();
+		negativeNumbers.clear();
+		numberOfNumbersAfterComma = 0;
+		currentNumberHasComma = false;
+		lastActionWasPi = false;
+		lastString = "0";
+		lastActionWasNumber = true;
+		numericalValue = true;
+		parenthesesOpened = 0;
+	}
+	
+	
+	private ArrayList <String> possibleNumbers = new ArrayList <String> ();
+	private ArrayList <String> possibleOperations = new ArrayList <String> ();
+	
+	private int parenthesesOpened;
+	
+	// construtor sem argumentos
+
+	public Calculator() {
+
+		super("Calculator");
+		
+		AddValuesToLists ();
+		
+		borderLayout = new BorderLayout();
+		
+		textField.setText("0");
+		textField.setEditable(false);
+		textField.setFont(new Font("Serif", Font.PLAIN, 24));;
+		
+		buttons = new JButton[caracteres.length][caracteres[0].length]; // cria array de JButtons
+
+		setLayout(borderLayout);
+		
+		JPanel panel1 = new JPanel();
+		panel1.setLayout(new GridLayout (caracteres.length, caracteres[0].length, 3, 3));
+		add (textField, BorderLayout.NORTH);
+		add (panel1, BorderLayout.CENTER);
+		
+		for (int i = 0; i < caracteres.length; i++) {
+			for (int j = 0; j < caracteres[0].length; j++){
+				buttons[i][j] = new JButton(caracteres[i][j]);
+				buttons[i][j].addActionListener(this);
+				panel1.add(buttons[i][j]);
+			}
+		}
+		
+		TurnIntoText (0);
+	}
+	
+	@Override
+	public void actionPerformed (ActionEvent event) {
+		String s = event.getActionCommand();
+		numericalValue = false;
+		if (numberList.size() == normalOperationsList.size() + 1) {
+			numericalValue = true;
+		}
+		
+		switch (s) {
+		
+		case "x!":
+			if (numericalValue) {
+				double d = Calculate();
+				if (isInt(d)) {
+					double result = 1;
+					while (d > 0) {
+						result *= d;
+						d --;
+					}
+					TurnIntoText (result);
+				}
+			}
+			break;
+			
+		case "e^x":
+			if (numericalValue) {
+				TurnIntoText (Math.exp(Calculate()));
+			}
+			break;
+		
+		case "raiz²":
+			if (numericalValue) {
+				TurnIntoText (Math.sqrt(Calculate()));
+			}
+			break;
+		
+		case "raiz³":
+			if (numericalValue) {
+				TurnIntoText (Math.cbrt(Calculate()));
+			}
+			break;
+			
+		case "%":
+			if (numericalValue) {
+				TurnIntoText (Calculate()/100);
+			}
+			break;
+		
+		case "x²":
+			if (lastActionWasNumber) {
+				AddToText("^");
+				lastActionWasNumber = false;
+				AddToText("2");
+			}
+			break;
+			
+		case "x³":
+			if (lastActionWasNumber) {
+				AddToText("^");
+				lastActionWasNumber = false;
+				AddToText("2");
+			}
+			break;
+		
+		case "x^y":
+			AddToText("^");
+			break;
+			
+		case "Clear":
+			ClearLists();
+			TurnIntoText (0);
+			break;
+			
+		case "=":
+			TurnIntoText (Calculate());
+			break;
+	
+		default:
+			AddToText (s);
+		}
+		//If something changed with the user's last act, this is true:
+		if (!GetTextAsString().equals(lastString)) {
+			lastActionWasNumber = possibleNumbers.contains(s);
+			if (s == ".") {
+				lastActionWasNumber = true;
+			} else if (currentNumberHasComma) {
+				//Determines when the number with comma ends.
+				currentNumberHasComma = possibleNumbers.contains(s);				
+			}
+			lastActionWasPi = (s == "pi");
+		} 
+		if (IsTextADouble()) {
+			lastActionWasNumber = true;
+		}
+		lastString = GetTextAsString();
+	}
+	
+	private void AddToText (String toAdd){
+		
+		//Checks if the text is equal to 0.
+		if (GetTextAsString().equals("0") && !currentNumberHasComma) {
+			if (possibleNumbers.contains(toAdd)) {
+				if (toAdd == "pi") {
+					numberList.clear();
+					numberList.add(Math.PI);
+					textField.setText(toAdd);
+					return;
+				}
+				numberList.clear();
+				numberList.add(Double.valueOf(toAdd));
+				textField.setText(toAdd);
+				
+			} else if (toAdd.equals("(")){
+				numberList.clear();
+				parenthesesOpened++;
+				parenthesesList.add(toAdd);
+				operationList.add(toAdd);
+				textField.setText(toAdd);
+				
+			} else if (toAdd.equals(".")) {
+				numberList.clear();
+				numberList.add(0.0);
+				currentNumberHasComma = true;
+				numberOfNumbersAfterComma = 0;
+				textField.setText("0.");
+				
+			} else if (toAdd.equals("+")) {
+				numberList.clear();
+				textField.setText("+");
+				
+			} else if (toAdd.equals("-")){
+				numberList.clear();
+				textField.setText("-");
+				negativeNumbers.add(0);
+				
+			} else if(!toAdd.equals(")")){
+				numberList.clear();
+				numberList.add(0.0);
+				normalOperationsList.add(toAdd);
+				operationList.add(toAdd);
+				textField.setText("0" + toAdd);
+			}
+			return;
+		}
+		
+		if (GetTextAsString().equals("-") || GetTextAsString().equals("-")) {
+			if (possibleNumbers.contains(toAdd)) {
+				if (toAdd == "pi") {
+					numberList.add(Math.PI);
+					textField.setText(textField.getText() + toAdd);
+					return;
+				} else {
+					numberList.add(Double.valueOf(toAdd));
+					textField.setText(textField.getText() + toAdd);
+				}
+			}
+			return;
+		}
+		
+		//Add the input to the list of operations and verifies if it is a valid input:
+		if (possibleNumbers.contains(toAdd)) {
+			if (lastActionWasPi) {
+				return;
+			}
+			if (lastActionWasNumber) {
+				if (lastString != "pi" && lastString != "+" && lastString != "-") {
+					if (toAdd != "pi") {
+						if (!currentNumberHasComma) {
+							numberList.set(numberList.size()-1, numberList.get(numberList.size()-1)*10 + Double.valueOf(toAdd));
+						} else {
+							numberOfNumbersAfterComma++;
+							numberList.set(numberList.size()-1, numberList.get(numberList.size()-1) + (Double.valueOf(toAdd) * Math.pow(0.1, +numberOfNumbersAfterComma)));
+						}
+					} else {
+							return;
+					}
+				}
+			} else {
+				if (toAdd == "pi") {
+					numberList.add(Math.PI);
+				} else {
+					numberList.add(Double.valueOf(toAdd));
+				}
+			}
+		} else if (toAdd.equals("(")) {
+			if (lastActionWasNumber || LastOperationIsParenthesesClosed() || negativeNumbers.contains(numberList.size())) {
+				return;
+			} else {
+				parenthesesOpened++;
+				parenthesesList.add(toAdd);
+				operationList.add(toAdd);
+			}
+		} else if (toAdd.equals(")")){
+			if ((lastActionWasNumber || LastOperationIsParenthesesClosed()) && parenthesesOpened > 0) {
+				parenthesesOpened--;
+				parenthesesList.add(toAdd);
+				operationList.add(toAdd);
+			} else {
+				return;
+			}
+		} else if (toAdd.equals(".")) {
+			if (lastActionWasNumber) {
+				currentNumberHasComma = true;
+				numberOfNumbersAfterComma = 0;
+			} else {
+				return;
+			}
+		} else {
+			if (lastActionWasNumber || LastOperationIsParenthesesClosed ()) {
+				normalOperationsList.add(toAdd);
+				operationList.add(toAdd);
+			} else if (LastActionIsParenthesesOpened()) {
+				if (toAdd.equals("+")) {
+				} else if (toAdd.equals("-")) {
+					negativeNumbers.add(numberList.size());
+				}
+			} else {
+				return;
+			}
+		}
+		
+		//Edit the text:
+		textField.setText(textField.getText() + toAdd);
+	}
+	
+	private boolean IsTextADouble () {
+		
+		try {
+			Double d = Double.valueOf(textField.getText());
+			return true;
+		}
+		catch (NumberFormatException e) {
+			return false;
+		}
+	}
+	
+	private String GetTextAsString () {
+		return textField.getText();
+	}
+	
+	private void TurnIntoText (Double d) {
+		ClearLists();
+		numberList.add(d);
+		if (isInt(d)) {
+			textField.setText(String.valueOf(d.intValue()));
+			return;
+		}
+		textField.setText(String.valueOf(d));
+	}
+	
+	private void TurnIntoText (int i) {
+		ClearLists();
+		numberList.add(new Double (i));
+		textField.setText(String.valueOf(i));
+	}
+
+	private boolean isInt (Double d) {
+		return (d % 1 == 0);
+	}
+	
+	private boolean LastOperationIsParenthesesClosed () {
+		if (operationList.size() == 0) {
+			return false;
+		}
+		if (operationList.get(operationList.size()-1).equals(")")) {
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean LastActionIsParenthesesOpened () {
+		if (operationList.size() == 0) {
+			return false;
+		}
+		if (GetTextAsString().endsWith("(")) {
+			return true;
+		}
+		return false;
+	}
+	
+	private Double Calculate () {
+		
+		int biggestNumberOfParentheses = 0;
+		int currentNumberOfParentheses = 0;
+		
+		//Calculates number of Parentheses in the equation:
+		for (int i = 0; i < parenthesesList.size(); i ++) {
+			if (parenthesesList.get(i).equals("(")) {
+				currentNumberOfParentheses ++;
+				if (currentNumberOfParentheses > biggestNumberOfParentheses) {
+					biggestNumberOfParentheses = currentNumberOfParentheses;
+				}
+			} else if (parenthesesList.get(i).equals(")")){
+				currentNumberOfParentheses --;
+			}
+		}
+		
+		for (int i = 0; i < numberList.size(); i++) {
+			if (negativeNumbers.contains(i)) {
+				numberList.set(i, -numberList.get(i));
+			}
+		}
+		
+		while (biggestNumberOfParentheses > 0) {
+			currentNumberOfParentheses = 0;
+			for (int i = 0; i < operationList.size(); i++) {
+				if (operationList.get(i).equals("(")) {
+					currentNumberOfParentheses ++;
+					if (currentNumberOfParentheses == biggestNumberOfParentheses) {
+						
+						int initialNumberPosition = transformIndexOperationListToNumberListIndex (i);
+						
+						int finalParenthesesPosition = 0;
+						int finalNumberPosition = -1;
+						
+						for (int j = i; finalNumberPosition == -1; j ++) {
+							if (operationList.get(j).equals(")")) {
+								finalNumberPosition = transformIndexOperationListToNumberListIndex (j);
+								finalParenthesesPosition = j;
+							}
+						}
+						
+						ArrayList <Double> smallNumberList = new ArrayList <Double> ();
+						ArrayList <String> smallNormalOperationsList = new ArrayList <String> ();
+						
+						for (int j = initialNumberPosition; j <= finalNumberPosition; j ++) {
+							smallNumberList.add(numberList.get(j));
+							if (j > initialNumberPosition) {
+								smallNormalOperationsList.add(normalOperationsList.get(j-1));
+							}
+						}
+						
+						numberList.set(initialNumberPosition, CalculateWithoutParentheses(smallNumberList, smallNormalOperationsList));
+						
+						for (int j = initialNumberPosition + 1; j <= finalNumberPosition; j ++) {
+							numberList.remove(initialNumberPosition + 1);
+							normalOperationsList.remove(initialNumberPosition);
+						} 
+						
+						i--;
+						
+						for (int j = finalParenthesesPosition; j > i; j--) {
+							operationList.remove(j);
+						}
+						
+						currentNumberOfParentheses --;
+					}
+				} else if (operationList.get(i).equals(")")){
+					currentNumberOfParentheses --;
+				}
+			}
+			biggestNumberOfParentheses--;
+		}
+		
+		return CalculateWithoutParentheses(numberList, normalOperationsList);
+	}
+	
+	private int transformIndexOperationListToNumberListIndex (int indexInOperationList) {
+		//Returns the position of the next number after the parentheses.
+		int newIndex = 0;
+		for (int i  = 0; i < indexInOperationList; i ++) {
+			if (!operationList.get(i).equals("(") && !operationList.get(i).equals(")")) {
+				newIndex ++;
+			}
+		}
+		
+		return newIndex;
+	}
+	
+	private double CalculateWithoutParentheses (ArrayList <Double> numberList, ArrayList <String> normalOperationsList) {
+		
+		for (int o = 0; o < orderOfOperations.size(); o++) {
+			for (int i = 0; i < normalOperationsList.size(); i++) {
+				if (orderOfOperations.get(o).contains(normalOperationsList.get(i))){
+					numberList.set(i, Operate(numberList.get(i), numberList.get(i+1), normalOperationsList.get(i)));
+					numberList.remove(i+1);
+					normalOperationsList.remove(i);
+					i--;
+				}
+			}
+		}
+		return numberList.get(0);
+	}
+	
+	private double Operate (Double num1, Double num2, String normalOperation) {
+		
+		double result = 0;
+		
+		switch (normalOperation) {
+		case "+":
+			result = num1 + num2;
+			break;
+		case "-":
+			result = num1 - num2;
+			break;
+		case "*":
+			result = num1 * num2;
+			break;
+		case "/":
+			result = num1 / num2;
+			break;
+		case "^":
+			result = Math.pow(num1, num2);
+		}
+		return result;
+	}
+	
+	private void AddValuesToLists () {
+		possibleNumbers.add("0");
+		possibleNumbers.add("1");
+		possibleNumbers.add("2");
+		possibleNumbers.add("3");
+		possibleNumbers.add("4");
+		possibleNumbers.add("5");
+		possibleNumbers.add("6");
+		possibleNumbers.add("7");
+		possibleNumbers.add("8");
+		possibleNumbers.add("9");
+		possibleNumbers.add("0");
+		possibleNumbers.add("pi");
+		
+		possibleOperations.add("+");
+		possibleOperations.add("-");
+		possibleOperations.add("*");
+		possibleOperations.add("/");
+		possibleOperations.add("^");
+		possibleOperations.add("(");
+		possibleOperations.add(")");
+		possibleOperations.add(".");
+		
+		ArrayList <String> temp1 = new ArrayList <String> ();
+		ArrayList <String> temp2 = new ArrayList <String> ();
+		ArrayList <String> temp3 = new ArrayList <String> ();
+		temp1.add("^");
+		orderOfOperations.add(temp1);
+		temp2.add("*");
+		temp2.add("/");
+		orderOfOperations.add(temp2);
+		temp3.add("+");
+		temp3.add("-");
+		orderOfOperations.add(temp3);
+	}
+
+	public static void main(String[] args) {
+
+		Calculator calculator = new Calculator();
+
+		calculator.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		calculator.setSize(500, 200);
+
+		calculator.setVisible(true);
+
+	}
+
+}
