@@ -1,0 +1,41 @@
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+
+public class Printer extends JFrame {
+	
+	private JButton okButton, cancelButton, setupButton, helpButton;
+	private JPanel eastPanel;
+	private GridLayout eastGridLayout;
+		
+	
+	public Printer () {
+		
+		super ("Printer");
+		
+		okButton = new JButton ("OK");
+		cancelButton = new JButton ("Cancel");
+		setupButton = new JButton ("Setup");
+		helpButton = new JButton ("Help");
+
+		eastGridLayout = new GridLayout (4, 1, 5, 5);
+		
+		eastPanel = new JPanel ();
+		
+		eastPanel.setLayout(eastGridLayout);
+		
+		eastPanel.add(okButton);
+		eastPanel.add(cancelButton);
+		eastPanel.add(setupButton);
+		eastPanel.add(helpButton);
+		
+		add (eastPanel, BorderLayout.EAST);		
+	}
+	
+	public static void main (String args []) {
+		Printer printer = new Printer ();
+		printer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		printer.setSize(400,200);
+		printer.setVisible(true);
+	}
+}
