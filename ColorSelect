@@ -8,7 +8,7 @@ public class ColorSelect extends JFrame{
 	private Color currentColor, initialColor = Color.LIGHT_GRAY;
 	
 	private JPanel colorJPanel, jPanel1, jPanel2;
-	private Point [] colorPoints = new Point [10000];
+	private Point [] colorPoints = new Point [100000];
 	private int pointCount = 0;
 	private int colorPointSize = 4, maximumColorPointSize = 10, minimumColorPointSize = 2;
 	
@@ -24,7 +24,7 @@ public class ColorSelect extends JFrame{
 		colorJButton.addActionListener(
 			new ActionListener() { 
 				@Override
-				public void actionPerformed(ActionEvent arg0) {
+				public void actionPerformed(ActionEvent e) {
 					currentColor = JColorChooser.showDialog(ColorSelect.this, "Escolhe uma cor", currentColor); 
 				
 					if (currentColor == null)
@@ -109,21 +109,24 @@ public class ColorSelect extends JFrame{
 			);
 		
 		jPanel1 = new JPanel();
-		
-		jPanel1.setLayout(new GridLayout (3, 1, 10, 10));
-		
-		jPanel1.add(colorJButton);
-		jPanel1.add(okJButton);
-		jPanel1.add(cancelJButton);
-		
+
+        JPanel box = new JPanel(new GridLayout(3, 1, 20, 20));
+        box.add(colorJButton);
+        box.add(okJButton);
+        box.add(cancelJButton);
+        
+		jPanel1.setLayout(new GridBagLayout ());
+		jPanel1.add(box);
+
 		jPanel2 = new JPanel();
 		
-		jPanel2.setLayout(new GridLayout (1, 3, 10, 10));
+		JPanel box2 = new JPanel(new GridLayout (1, 3, 10, 10));
+		box2.add(plusJButton);
+		box2.add(minusJButton);
+		box2.add(eraseDrawingJButton);
 		
-		jPanel2.add(plusJButton);
-		jPanel2.add(minusJButton);
-		jPanel2.add(eraseDrawingJButton);
-		
+		jPanel2.setLayout(new GridBagLayout ());
+		jPanel2.add(box2);
 		
 		add(colorJPanel, BorderLayout.CENTER); //adiciona colorJPanel
 		add (jPanel1, BorderLayout.WEST);
