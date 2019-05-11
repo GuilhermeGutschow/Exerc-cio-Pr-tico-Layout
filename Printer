@@ -1,13 +1,19 @@
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 
 public class Printer extends JFrame {
 	
 	private JButton okButton, cancelButton, setupButton, helpButton;
+	private JCheckBox imageButton, textButton, codeButton, printToFileButton;
+	private JRadioButton selectionButton, allButton, appletButton;
+	private ButtonGroup buttonGroup;
+	private JTextArea text1 = new JTextArea (4,3), text2 = new JTextArea (4,3), text3 = new JTextArea (4,3);
+	private JTextField myPrinterText = new JTextField (1), printQualityText = new JTextField (1);
+	private JComboBox comboBox;
 	private JPanel eastPanel;
-	private GridLayout eastGridLayout;
-		
+	private static final String [] names = {"High", "Really High", "Extremely High", "Holyyyy"};
+	
+	private Box mainVerticalBox, verticalBoxWest, verticalBoxCenter, horizontalBoxCenter, horizontalBoxSouth;
 	
 	public Printer () {
 		
@@ -18,18 +24,74 @@ public class Printer extends JFrame {
 		setupButton = new JButton ("Setup");
 		helpButton = new JButton ("Help");
 
-		eastGridLayout = new GridLayout (4, 1, 5, 5);
+		imageButton = new JCheckBox ("Image");
+		textButton = new JCheckBox ("Text");
+		codeButton = new JCheckBox ("Code");
+		printToFileButton = new JCheckBox ("Print to File");
+
+		selectionButton = new JRadioButton ("Selection");
+		allButton = new JRadioButton ("All");
+		appletButton = new JRadioButton ("Applet");
+		buttonGroup = new ButtonGroup ();
+		buttonGroup.add(selectionButton);
+		buttonGroup.add(allButton);
+		buttonGroup.add(appletButton);
+
+		text1.setEditable(false);
+		text2.setEditable(false);
+		text3.setEditable(false);
 		
-		eastPanel = new JPanel ();
+		myPrinterText.setText("Printer: MyPrinter");
+		myPrinterText.setEditable(false);
+		printQualityText.setText("Print Quality:");
+		printQualityText.setEditable(false);
 		
-		eastPanel.setLayout(eastGridLayout);
+		comboBox = new JComboBox(names);
+		comboBox.setMaximumRowCount(names.length);
 		
-		eastPanel.add(okButton);
-		eastPanel.add(cancelButton);
-		eastPanel.add(setupButton);
-		eastPanel.add(helpButton);
+		verticalBoxWest = Box.createVerticalBox();
 		
-		add (eastPanel, BorderLayout.EAST);		
+		verticalBoxWest.add(imageButton);
+		verticalBoxWest.add(textButton);
+		verticalBoxWest.add(codeButton);
+		
+		verticalBoxCenter = Box.createVerticalBox();
+		
+		verticalBoxCenter.add(selectionButton);
+		verticalBoxCenter.add(allButton);
+		verticalBoxCenter.add(appletButton);
+		
+		horizontalBoxCenter = Box.createHorizontalBox();
+		horizontalBoxCenter.add(text1);
+		horizontalBoxCenter.add(verticalBoxWest);
+		horizontalBoxCenter.add(text2);
+		horizontalBoxCenter.add(verticalBoxCenter);
+		horizontalBoxCenter.add(text3);
+		
+		horizontalBoxSouth = Box.createHorizontalBox();
+		horizontalBoxSouth.add(printQualityText);
+		horizontalBoxSouth.add(comboBox);
+		horizontalBoxSouth.add(printToFileButton);
+		
+		mainVerticalBox = Box.createVerticalBox();
+        mainVerticalBox.add( Box.createRigidArea( new Dimension( 12, 10 ) ) );
+		mainVerticalBox.add(myPrinterText);
+        mainVerticalBox.add( Box.createRigidArea( new Dimension( 12, 6 ) ) );
+		mainVerticalBox.add(horizontalBoxCenter);
+        mainVerticalBox.add( Box.createRigidArea( new Dimension( 12, 6 ) ) );
+		mainVerticalBox.add(horizontalBoxSouth);
+        mainVerticalBox.add( Box.createRigidArea( new Dimension( 12, 10 ) ) );
+		
+		JPanel box = new JPanel (new GridLayout (4, 1, 10, 10));
+		box.add(okButton);
+		box.add(cancelButton);
+		box.add(setupButton);
+		box.add(helpButton);
+		eastPanel = new JPanel (new GridBagLayout());
+		eastPanel.add(box);
+		
+		add (mainVerticalBox, BorderLayout.CENTER);
+		add (eastPanel, BorderLayout.EAST);
 	}
 	
 	public static void main (String args []) {
